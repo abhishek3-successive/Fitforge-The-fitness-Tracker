@@ -51,7 +51,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
   const newUser = new User({ username, email, password: hashedPassword });
   await newUser.save();
   
-  // Generate JWT tokens
+  // Generate JWT tokens for automatic login
   const tokenPayload: JWTPayload = {
     id: newUser._id.toString(),
     email: newUser.email,
@@ -60,7 +60,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
 
   const accessToken = generateToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload);
-  
+
   // Remove password from response
   const userResponse = excludePassword(newUser);
   
@@ -249,6 +249,8 @@ export const getCurrentUser = asyncHandler(async (req: Request, res: Response) =
 
   return sendSuccess(res, req.user, "User profile retrieved successfully");
 });
+
+// Get user statistics
 export const getUserStats = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.query;
   const targetUserId = userId || req.user?.id;
