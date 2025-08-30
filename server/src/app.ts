@@ -1,4 +1,5 @@
 import express from "express";
+import path from "path";
 import route from "./router";
 import { 
   errorHandler, 
@@ -8,28 +9,28 @@ import {
   simpleRateLimit 
 } from "./middleware";
 
-
 const app = express();
 
 // Security and logging middleware
-app.use(requestLogger);
 app.use(securityHeaders);
+app.use(requestLogger);
 
-// Rate Limiter- 100 requests per 15 min per IP
+// Rate limiting - 100 requests per 15 minutes per IP
 app.use(simpleRateLimit(100, 15));
 
+// Serve static files from public directory
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+app.use('/test', express.static(path.join(__dirname, '../public')));
 
 // Add middleware for parsing JSON
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Use routes
 app.use("/api", route);
 
-// Error handling middleware
-app.use(errorHandler);
+// Global error handling (must be after routes)
 app.use(notFoundHandler);
-
-
+app.use(errorHandler);
 
 export default app;

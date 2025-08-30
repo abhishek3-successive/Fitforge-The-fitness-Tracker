@@ -8,8 +8,10 @@ import {
   startWorkoutSession,
   completeWorkoutSession,
   getUserWorkoutStats,
-  getRecentWorkouts
+  getRecentWorkouts,
+  getActiveWorkoutSession
 } from "./workOutSession.controller";
+import { authenticateToken, optionalAuth } from "../../middleware/auth";
 
 const router = Router();
 
@@ -19,15 +21,16 @@ router.get('/health', (req, res) => {
 });
 
 // Workout session CRUD operations
-router.post('/', createWorkoutSession);                 // Create workout session
-router.get('/', getWorkoutSessions);                    // Get all workout sessions with filtering
-router.get('/:id', getWorkoutSessionById);              // Get workout session by ID
-router.put('/:id', updateWorkoutSession);               // Update workout session
-router.delete('/:id', deleteWorkoutSession);            // Delete workout session
+router.post('/', authenticateToken, createWorkoutSession);                 // Create workout session
+router.get('/', optionalAuth, getWorkoutSessions);                         // Get all workout sessions with filtering
+router.get('/active', optionalAuth, getActiveWorkoutSession);              // Get active workout session for user
+router.get('/:id', optionalAuth, getWorkoutSessionById);                   // Get workout session by ID
+router.put('/:id', authenticateToken, updateWorkoutSession);               // Update workout session
+router.delete('/:id', authenticateToken, deleteWorkoutSession);            // Delete workout session
 
 // Workout session actions
-router.patch('/:id/start', startWorkoutSession);        // Start a workout session
-router.patch('/:id/complete', completeWorkoutSession);  // Complete a workout session
+router.patch('/:id/start', authenticateToken, startWorkoutSession);        // Start a workout session
+router.patch('/:id/complete', authenticateToken, completeWorkoutSession);  // Complete a workout session
 
 // User specific routes
 router.get('/user/:userId/stats', getUserWorkoutStats); // Get user workout statistics

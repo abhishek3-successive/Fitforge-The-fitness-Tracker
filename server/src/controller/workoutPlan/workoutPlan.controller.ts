@@ -4,6 +4,8 @@ import { Request, Response } from "express";
 // Create a new workout plan
 export const createWorkoutPlan = async (req: Request, res: Response) => {
   try {
+    console.log('📝 Creating workout plan for user:', req.body.createdBy);
+    
     const workoutPlanData: Partial<IWorkoutPlan> = req.body;
     const newWorkoutPlan = new WorkoutPlan(workoutPlanData);
     await newWorkoutPlan.save();
@@ -13,12 +15,15 @@ export const createWorkoutPlan = async (req: Request, res: Response) => {
       { path: 'workoutDays.exercises.exercise', select: 'name category muscleGroups' }
     ]);
     
+    console.log('✅ Workout plan created successfully');
     res.status(201).json({
       success: true,
       message: "Workout plan created successfully",
       data: newWorkoutPlan
     });
   } catch (error) {
+    console.error('❌ Error creating workout plan:', error);
+    
     res.status(500).json({
       success: false,
       message: "Error creating workout plan",

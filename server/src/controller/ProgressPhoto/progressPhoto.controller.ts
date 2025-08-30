@@ -1,10 +1,56 @@
 import ProgressPhoto, { IProgressPhoto } from "../../models/progressPhoto";
 import { Request, Response } from "express";
+import { getFileUrl, deleteFile } from "../../middleware/upload";
+import path from "path";
 
 // Create a new progress photo
 export const createProgressPhoto = async (req: Request, res: Response) => {
   try {
-    const photoData: Partial<IProgressPhoto> = req.body;
+    console.log('Creating progress photo...');
+    console.log('File:', req.file);
+    console.log('Body:', req.body);
+    console.log('User:', req.user);
+
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No image file provided"
+      });
+    }
+
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required"
+      });
+    }
+
+    // Parse the additional data from the request body
+    let additionalData = {};
+    try {
+      additionalData = req.body.data ? JSON.parse(req.body.data) : {};
+    } catch (parseError) {
+      console.error('Error parsing data:', parseError);
+      // If JSON parsing fails, try to extract data directly from body
+      additionalData = req.body;
+    }
+    
+    // Get the file URL
+    const imageUrl = getFileUrl(req.file.filename);
+    console.log('Generated imageUrl:', imageUrl);
+    
+    // Create progress photo data
+    const photoData: Partial<IProgressPhoto> = {
+      ...additionalData,
+      imageUrl,
+      user: req.user._id, // Get user ID from authenticated user
+      dateTaken: new Date(),
+    };
+
+    console.log('Photo data to save:', photoData);
+
     const newPhoto = new ProgressPhoto(photoData);
     await newPhoto.save();
     
@@ -16,6 +62,13 @@ export const createProgressPhoto = async (req: Request, res: Response) => {
       data: newPhoto
     });
   } catch (error) {
+    console.error('Error creating progress photo:', error);
+    
+    // If there's an error, clean up the uploaded file
+    if (req.file) {
+      deleteFile(req.file.filename);
+    }
+    
     res.status(500).json({
       success: false,
       message: "Error creating progress photo",
@@ -153,6 +206,12 @@ export const deleteProgressPhoto = async (req: Request, res: Response) => {
         success: false,
         message: "Progress photo not found"
       });
+    }
+
+    // Delete the associated file
+    if (photo.imageUrl) {
+      const filename = path.basename(photo.imageUrl);
+      deleteFile(filename);
     }
 
     res.status(200).json({

@@ -1,10 +1,17 @@
 import WorkoutSession, { IWorkoutSession } from "../../models/workoutSession";
+import mongoose from "mongoose";
 import { Request, Response } from "express";
 
 // Create a new workout session
 export const createWorkoutSession = async (req: Request, res: Response) => {
   try {
-    const sessionData: Partial<IWorkoutSession> = req.body;
+    const sessionData: Partial<IWorkoutSession> = {
+      ...req.body,
+      user: req.user._id // Ensure the user ID is set from the authenticated request
+    };
+    
+    console.log('Creating workout session with data:', sessionData);
+    
     const newSession = new WorkoutSession(sessionData);
     await newSession.save();
     
@@ -14,12 +21,15 @@ export const createWorkoutSession = async (req: Request, res: Response) => {
       { path: 'exercises.exercise', select: 'name category muscleGroups' }
     ]);
     
+    console.log('Workout session created successfully:', newSession._id);
+    
     res.status(201).json({
       success: true,
       message: "Workout session created successfully",
       data: newSession
     });
   } catch (error) {
+    console.error('Error creating workout session:', error);
     res.status(500).json({
       success: false,
       message: "Error creating workout session",
@@ -277,7 +287,7 @@ export const getUserWorkoutStats = async (req: Request, res: Response) => {
     const stats = await WorkoutSession.aggregate([
       {
         $match: {
-          user: userId,
+          user: new mongoose.Types.ObjectId(userId), // Changed from userId to user and convert to ObjectId
           status: 'completed',
           startTime: { $gte: dateFilter }
         }
@@ -336,6 +346,46 @@ export const getRecentWorkouts = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: "Error fetching recent workouts",
+      error: error instanceof Error ? error.message : error
+    });
+  }
+};
+
+// Get active workout session for a user
+export const getActiveWorkoutSession = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "UserId is required"
+      });
+    }
+
+    const activeSession = await WorkoutSession.findOne({
+      user: userId,
+      status: 'in-progress'
+    })
+      .populate('user', 'username email')
+      .populate('workoutPlan', 'title goal difficulty')
+      .populate('exercises.exercise');
+
+    if (!activeSession) {
+      return res.status(404).json({
+        success: false,
+        message: "No active workout session found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: activeSession
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching active workout session",
       error: error instanceof Error ? error.message : error
     });
   }
