@@ -326,7 +326,9 @@ export default function ActiveWorkoutPage() {
     if (!activeSession) return;
 
     try {
-      await WorkoutSessionService.completeWorkoutSession(activeSession._id, workoutTimer / 60);
+      await WorkoutSessionService.completeWorkoutSession(activeSession._id, {
+        duration: workoutTimer / 60 // Convert seconds to minutes
+      });
       toast.success('Workout completed! Great job! 🎉');
       setCompleteDialogOpen(false);
       router.push('/dashboard');

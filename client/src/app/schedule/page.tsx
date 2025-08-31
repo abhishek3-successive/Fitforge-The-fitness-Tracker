@@ -236,7 +236,7 @@ export default function SchedulePage() {
 
   const handleCompleteSession = async (sessionId: string) => {
     try {
-      await WorkoutSessionService.completeWorkoutSession(sessionId);
+      await WorkoutSessionService.completeWorkoutSession(sessionId, {});
       toast.success('Workout session completed!');
       fetchWorkoutSessions();
     } catch (error) {

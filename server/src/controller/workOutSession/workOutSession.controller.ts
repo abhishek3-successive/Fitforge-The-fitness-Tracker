@@ -229,13 +229,53 @@ export const startWorkoutSession = async (req: Request, res: Response) => {
 export const completeWorkoutSession = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { caloriesBurned, rating, mood, energy, notes } = req.body;
+    const { caloriesBurned, rating, mood, energy, notes, duration } = req.body;
+    
+    console.log('🎯 Completing workout session:', {
+      id,
+      userId: req.user?.id,
+      data: { caloriesBurned, rating, mood, energy, notes, duration }
+    });
+
+    // First, get the session to check ownership and current state
+    const existingSession = await WorkoutSession.findById(id);
+    if (!existingSession) {
+      return res.status(404).json({
+        success: false,
+        message: "Workout session not found"
+      });
+    }
+
+    console.log('📋 Existing session:', {
+      status: existingSession.status,
+      user: existingSession.user,
+      startTime: existingSession.startTime,
+      exercises: existingSession.exercises.length
+    });
+
+    // Check if user owns this session
+    if (existingSession.user.toString() !== req.user?.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to complete this workout session"
+      });
+    }
+
+    const endTime = new Date();
+    let calculatedDuration = duration;
+
+    // If duration not provided, calculate from startTime to now
+    if (!calculatedDuration && existingSession.startTime) {
+      calculatedDuration = Math.round((endTime.getTime() - existingSession.startTime.getTime()) / (1000 * 60));
+      console.log('⏱️ Calculated duration:', calculatedDuration, 'minutes');
+    }
     
     const session = await WorkoutSession.findByIdAndUpdate(
       id,
       { 
         status: 'completed',
-        endTime: new Date(),
+        endTime: endTime,
+        duration: calculatedDuration,
         caloriesBurned,
         rating,
         mood,
@@ -248,12 +288,13 @@ export const completeWorkoutSession = async (req: Request, res: Response) => {
       { path: 'exercises.exercise', select: 'name category' }
     ]);
 
-    if (!session) {
-      return res.status(404).json({
-        success: false,
-        message: "Workout session not found"
-      });
-    }
+    console.log('✅ Workout session completed:', {
+      id: session?._id,
+      status: session?.status,
+      duration: session?.duration,
+      endTime: session?.endTime,
+      exercisesCount: session?.exercises.length
+    });
 
     res.status(200).json({
       success: true,
@@ -261,6 +302,7 @@ export const completeWorkoutSession = async (req: Request, res: Response) => {
       data: session
     });
   } catch (error) {
+    console.error('❌ Error completing workout session:', error);
     res.status(500).json({
       success: false,
       message: "Error completing workout session",

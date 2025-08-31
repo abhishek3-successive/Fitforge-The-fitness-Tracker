@@ -108,9 +108,10 @@ export class WorkoutSessionService {
    */
   static async startWorkoutSession(id: string): Promise<WorkoutSession> {
     try {
-      const response = await apiClient.post(`/workout-sessions/${id}/start`);
+      const response = await apiClient.patch(`/workout-sessions/${id}/start`);
       return handleApiResponse(response);
     } catch (error) {
+      console.error('❌ Start workout session error:', error);
       throw new Error(handleApiError(error));
     }
   }
@@ -118,26 +119,38 @@ export class WorkoutSessionService {
   /**
    * Complete a workout session
    */
-  static async completeWorkoutSession(id: string, duration?: number): Promise<WorkoutSession> {
+  static async completeWorkoutSession(id: string, data?: {
+    duration?: number;
+    caloriesBurned?: number;
+    rating?: number;
+    mood?: string;
+    energy?: string;
+    notes?: string;
+  }): Promise<WorkoutSession> {
     try {
-      const response = await apiClient.post(`/workout-sessions/${id}/complete`, {
+      const response = await apiClient.patch(`/workout-sessions/${id}/complete`, {
         endTime: new Date().toISOString(),
-        duration,
+        ...data,
       });
       return handleApiResponse(response);
     } catch (error) {
+      console.error('❌ Complete workout session error:', error);
       throw new Error(handleApiError(error));
     }
   }
 
   /**
-   * Cancel a workout session
+   * Cancel a workout session (using update method)
    */
   static async cancelWorkoutSession(id: string): Promise<WorkoutSession> {
     try {
-      const response = await apiClient.post(`/workout-sessions/${id}/cancel`);
+      const response = await apiClient.put(`/workout-sessions/${id}`, {
+        status: 'cancelled',
+        endTime: new Date().toISOString(),
+      });
       return handleApiResponse(response);
     } catch (error) {
+      console.error('❌ Cancel workout session error:', error);
       throw new Error(handleApiError(error));
     }
   }

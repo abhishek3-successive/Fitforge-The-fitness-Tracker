@@ -259,6 +259,8 @@ export const getUserStats = asyncHandler(async (req: Request, res: Response) => 
     return sendError(res, "User ID is required", 400);
   }
 
+  console.log('📊 Fetching user stats for userId:', targetUserId);
+
   try {
     // Import models
     const WorkoutSession = (await import("../../models/workoutSession")).default;
@@ -270,40 +272,66 @@ export const getUserStats = asyncHandler(async (req: Request, res: Response) => 
       return sendNotFound(res, "User");
     }
 
+    console.log('👤 Found user:', { id: user._id, username: user.username });
+
     // Calculate account age
     const accountAge = Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24));
 
+    // Debug: Check all workout sessions for this user
+    const allSessions = await WorkoutSession.find({ user: user._id });
+    console.log('🏋️ All workout sessions for user:', {
+      total: allSessions.length,
+      statuses: allSessions.reduce((acc, session) => {
+        acc[session.status] = (acc[session.status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    });
+
     // Get workout statistics
     const workoutStats = await WorkoutSession.aggregate([
-      { $match: { userId: user._id } },
+      { $match: { user: user._id } },
       {
         $group: {
           _id: null,
           totalWorkouts: { $sum: 1 },
-          totalDuration: { $sum: "$duration" },
           completedWorkouts: {
             $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] }
+          },
+          totalDuration: { 
+            $sum: { 
+              $cond: [
+                { $and: [{ $eq: ["$status", "completed"] }, { $ne: ["$duration", null] }] }, 
+                "$duration", 
+                0 
+              ] 
+            } 
           }
         }
       }
     ]);
 
+    console.log('📈 Workout stats aggregation result:', workoutStats);
+
     // Get unique exercises count
     const exercisesStats = await WorkoutSession.aggregate([
-      { $match: { userId: user._id } },
+      { $match: { user: user._id, status: "completed" } },
       { $unwind: "$exercises" },
-      { $group: { _id: "$exercises.exerciseId" } },
+      { $group: { _id: "$exercises.exercise" } },
       { $count: "totalExercises" }
     ]);
 
+    console.log('🏋️ Exercises stats aggregation result:', exercisesStats);
+
     // Calculate current streak (simplified - consecutive days with workouts)
     const recentWorkouts = await WorkoutSession.find({ 
-      userId: user._id, 
+      user: user._id,
       status: "completed" 
     })
     .sort({ createdAt: -1 })
     .limit(30)
     .select('createdAt');
+
+    console.log('🔥 Recent completed workouts for streak:', recentWorkouts.length);
 
     let currentStreak = 0;
     if (recentWorkouts.length > 0) {
@@ -334,20 +362,23 @@ export const getUserStats = asyncHandler(async (req: Request, res: Response) => 
       challengeStats.challengesWon = Math.floor(challenges.length * 0.3); // Placeholder
     } catch (error) {
       // Challenge model might not exist yet
+      console.log('⚠️ Challenge model not available:', error);
     }
 
     const stats = {
-      totalWorkouts: workoutStats[0]?.totalWorkouts || 0,
+      totalWorkouts: workoutStats[0]?.completedWorkouts || 0, // Use completed workouts instead of all
       currentStreak,
       totalExercises: exercisesStats[0]?.totalExercises || 0,
-      averageWorkoutDuration: workoutStats[0]?.totalWorkouts > 0 
-        ? Math.round((workoutStats[0]?.totalDuration || 0) / workoutStats[0].totalWorkouts) 
+      averageWorkoutDuration: workoutStats[0]?.completedWorkouts > 0 
+        ? Math.round((workoutStats[0]?.totalDuration || 0) / workoutStats[0].completedWorkouts) 
         : 0,
       totalChallenges: challengeStats.totalChallenges,
       challengesWon: challengeStats.challengesWon,
       progressPhotos: 0, // Placeholder - would need progress photos model
       accountAge
     };
+
+    console.log('📊 Final calculated stats:', stats);
 
     return sendSuccess(res, stats, "User statistics retrieved successfully");
   } catch (error) {
