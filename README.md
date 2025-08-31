@@ -118,21 +118,16 @@ Ensure you have the following installed:
 * JWT token-based authentication
 * TypeScript configuration
 * Development environment setup
-
-### 🚧 In Progress
-
 * Exercise database and management system
 * Workout plan creation and management
 * User profile and settings management
-
-### 📋 Planned Features
-
 * Frontend with Next.js
 * Progress tracking with photo uploads
 * Social challenges & leaderboards
 * Real-time notifications
 * Mobile responsive design
-* Performance analytics & reporting
+
+### 📋 Planned Features
 * Third-party integrations (fitness devices)
 * Advanced workout templates
 * Nutrition tracking (future scope)
