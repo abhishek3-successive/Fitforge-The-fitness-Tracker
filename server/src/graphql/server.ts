@@ -28,7 +28,6 @@ export const startGraphQLServer = async () => {
   const { url } = await startStandaloneServer(server, {
     listen: { port: 4000 },
     context: async ({ req }) => {
-      // You can add authentication logic here
       const token = req.headers.authorization;
       return { token };
     },
