@@ -98,8 +98,6 @@ Ensure you have the following installed:
    npm run dev
    ```
 
-5. **Access GraphQL Playground**
-   Visit: [http://localhost:4000/graphql](http://localhost:4000/graphql)
 
 ---
 
