@@ -33,12 +33,35 @@ export default function LoginPage() {
   const loginMutation = useMutation({
     mutationFn: AuthService.login,
     onSuccess: (data) => {
-      login(data.user, data.tokens || data);
-      toast.success("Welcome back!");
-      router.push("/dashboard");
+      // Ensure we have valid user and tokens before logging in
+      if (data.user && data.tokens) {
+        login(data.user, data.tokens);
+        toast.success("Welcome back!");
+        router.push("/dashboard");
+      } else {
+        toast.error("Login failed: Invalid response from server");
+      }
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Login failed. Please try again.");
+      console.error('Login error:', error);
+      
+      // Handle specific error cases
+      const errorMessage = error?.message || "Login failed. Please try again.";
+      
+      // Check if it's a 401 unauthorized error
+      if (error?.response?.status === 401 || errorMessage.toLowerCase().includes('invalid')) {
+        toast.error("Invalid email or password. Please check your credentials.");
+      } else if (error?.response?.status === 429) {
+        toast.error("Too many login attempts. Please try again later.");
+      } else if (error?.response?.status >= 500) {
+        toast.error("Server error. Please try again later.");
+      } else {
+        toast.error(errorMessage);
+      }
+      
+      // Clear any existing auth data on login failure
+      const { logout } = useAuthStore.getState();
+      logout();
     }
   });
 

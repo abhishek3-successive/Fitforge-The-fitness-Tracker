@@ -73,7 +73,12 @@ apiClient.interceptors.response.use(
     
     const originalRequest = error.config;
     
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't attempt token refresh for login/register endpoints or if already retrying
+    const isAuthEndpoint = originalRequest.url?.includes('/users/login') || 
+                          originalRequest.url?.includes('/users/register') ||
+                          originalRequest.url?.includes('/users/refresh-token');
+    
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
       
       try {
@@ -103,11 +108,16 @@ apiClient.interceptors.response.use(
         const { logout } = useAuthStore.getState();
         logout();
         
-        // Redirect to login page
-        if (typeof window !== 'undefined') {
+        // Redirect to login page only if not already on auth pages
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth/')) {
           window.location.href = '/auth/login';
         }
       }
+    }
+    
+    // For login/register failures, ensure error is properly rejected
+    if (isAuthEndpoint && error.response?.status === 401) {
+      console.warn('Authentication failed:', error.response.data?.message || 'Invalid credentials');
     }
     
     return Promise.reject(error);
