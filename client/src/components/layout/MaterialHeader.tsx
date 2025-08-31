@@ -21,6 +21,8 @@ import {
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/hooks/use-auth';
+import { useNotifications } from '@/hooks/use-notifications';
+import NotificationMenu from '@/components/ui/notification-menu';
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -29,20 +31,31 @@ interface HeaderProps {
 
 export const Header = ({ onMenuToggle, showMenuButton = false }: HeaderProps) => {
   const { user, logout } = useAuth();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { unreadCount } = useNotifications();
+  const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [notificationAnchorEl, setNotificationAnchorEl] = useState<null | HTMLElement>(null);
 
   // Handle user menu
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setUserMenuAnchorEl(event.currentTarget);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
+  const handleUserMenuClose = () => {
+    setUserMenuAnchorEl(null);
+  };
+
+  // Handle notification menu
+  const handleNotificationMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setNotificationAnchorEl(event.currentTarget);
+  };
+
+  const handleNotificationMenuClose = () => {
+    setNotificationAnchorEl(null);
   };
 
   const handleLogout = () => {
     logout();
-    handleMenuClose();
+    handleUserMenuClose();
   };
 
   return (
@@ -110,14 +123,17 @@ export const Header = ({ onMenuToggle, showMenuButton = false }: HeaderProps) =>
         {/* Right side - Notifications and User Menu */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {/* Notifications */}
-          <IconButton sx={{ color: 'text.primary' }}>
-            <Badge badgeContent={3} color="error">
+          <IconButton 
+            onClick={handleNotificationMenuOpen}
+            sx={{ color: 'text.primary' }}
+          >
+            <Badge badgeContent={unreadCount} color="error">
               <NotificationsIcon />
             </Badge>
           </IconButton>
 
           {/* User Menu */}
-          <IconButton onClick={handleMenuOpen} sx={{ color: 'text.primary' }}>
+          <IconButton onClick={handleUserMenuOpen} sx={{ color: 'text.primary' }}>
             <Avatar
               sx={{ 
                 width: 32, 
@@ -142,18 +158,18 @@ export const Header = ({ onMenuToggle, showMenuButton = false }: HeaderProps) =>
           </Typography>
 
           <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
+            anchorEl={userMenuAnchorEl}
+            open={Boolean(userMenuAnchorEl)}
+            onClose={handleUserMenuClose}
             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             sx={{ mt: 1 }}
           >
-            <MenuItem onClick={handleMenuClose}>
+            <MenuItem onClick={handleUserMenuClose}>
               <AccountCircleIcon sx={{ mr: 2 }} />
               Profile
             </MenuItem>
-            <MenuItem onClick={handleMenuClose}>
+            <MenuItem onClick={handleUserMenuClose}>
               <SettingsIcon sx={{ mr: 2 }} />
               Settings
             </MenuItem>
@@ -163,6 +179,13 @@ export const Header = ({ onMenuToggle, showMenuButton = false }: HeaderProps) =>
               Log out
             </MenuItem>
           </Menu>
+
+          {/* Notification Menu */}
+          <NotificationMenu
+            anchorEl={notificationAnchorEl}
+            open={Boolean(notificationAnchorEl)}
+            onClose={handleNotificationMenuClose}
+          />
         </Box>
       </Toolbar>
     </AppBar>

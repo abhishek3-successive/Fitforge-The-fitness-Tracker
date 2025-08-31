@@ -1,5 +1,6 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
@@ -7,11 +8,11 @@ const nextConfig = {
         destination: 'http://localhost:3002/api/:path*',
       },
       {
-        source: '/graphql/:path*',
-        destination: 'http://localhost:3002/graphql/:path*',
+        source: '/graphql',
+        destination: 'http://localhost:4000/',
       },
     ]
   },
 }
 
-module.exports = nextConfig
+export default nextConfig

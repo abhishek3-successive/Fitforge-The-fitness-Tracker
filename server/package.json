@@ -9,13 +9,21 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+   "@apollo/server": "^5.0.0",
+    "@graphql-tools/schema": "^10.0.25",
+    "@types/ws": "^8.18.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "graphql": "^16.11.0",
+    "graphql-subscriptions": "^3.0.0",
+    "graphql-tag": "^2.12.6",
+    "graphql-ws": "^6.0.6",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
