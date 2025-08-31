@@ -10,11 +10,11 @@ const httpLink = createHttpLink({
 });
 
 // WebSocket link for subscriptions (we'll add this later)
-// const wsLink = new GraphQLWsLink(
-//   createClient({
-//     url: 'ws://localhost:4000/graphql',
-//   })
-// );
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: 'ws://localhost:4000',
+  })
+);
 
 // Auth link to add authorization header
 const authLink = setContext((_, { headers }) => {
@@ -33,17 +33,17 @@ const authLink = setContext((_, { headers }) => {
 const link = authLink.concat(httpLink);
 
 // Uncomment this when we add subscriptions
-// const splitLink = split(
-//   ({ query }) => {
-//     const definition = getMainDefinition(query);
-//     return (
-//       definition.kind === 'OperationDefinition' &&
-//       definition.operation === 'subscription'
-//     );
-//   },
-//   wsLink,
-//   authLink.concat(httpLink)
-// );
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === 'OperationDefinition' &&
+      definition.operation === 'subscription'
+    );
+  },
+  wsLink,
+  authLink.concat(httpLink)
+);
 
 // Create Apollo Client
 export const apolloClient = new ApolloClient({
