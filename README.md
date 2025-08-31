@@ -103,25 +103,6 @@ Ensure you have the following installed:
 
 ---
 
-## 🏗️ Project Structure
-
-```
-fitness-tracker/
-├── client/                 # Next.js frontend (Coming Soon)
-├── server/                 # Node.js backend (In Development)
-│   ├── src/
-│   │   ├── config/        # Database and service configurations
-│   │   ├── models/        # MongoDB schemas
-│   │   ├── middleware/    # Authentication and validation middleware
-│   │   ├── controller/    # Business logic services
-│   │   ├── utils/         # Helper functions and utilities
-│   │   └── server.ts      # Express server entry point
-│   ├── package.json
-│   └── tsconfig.json
-├── shared/                # Shared types and utilities (Planned)
-├── docs/                  # Documentation
-└── README.md
-```
 
 ---
 
