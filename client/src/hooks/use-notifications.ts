@@ -23,8 +23,9 @@ export const useNotifications = () => {
       } else {
         setNotifications(prev => [...prev, ...result]);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch notifications');
+    } catch (err: any) {
+      const message = err?.response?.data?.message || (err instanceof Error ? err.message : 'Failed to fetch notifications');
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -45,21 +46,23 @@ export const useNotifications = () => {
     try {
       await NotificationService.markAsRead(notificationId);
       
-      // Update local state
       setNotifications(prev => 
         prev.map(notification => 
-          notification._id === notificationId
-            ? { ...notification, isRead: true, readAt: new Date().toISOString() }
-            : notification
+          {
+            if (notification._id === notificationId && !notification.isRead) {
+              // Update unread count only if it was previously unread
+              setUnreadCount(prevCount => Math.max(0, prevCount - 1));
+              return { ...notification, isRead: true, readAt: new Date().toISOString() };
+            }
+            return notification;
+          }
         )
       );
       
-      // Update unread count
-      setUnreadCount(prev => Math.max(0, prev - 1));
-      
       return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to mark notification as read');
+    } catch (err: any) {
+      const message = err?.response?.data?.message || (err instanceof Error ? err.message : 'Failed to mark notification as read');
+      setError(message);
       return false;
     }
   }, []);
@@ -81,8 +84,9 @@ export const useNotifications = () => {
       
       setUnreadCount(0);
       return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to mark all notifications as read');
+    } catch (err: any) {
+      const message = err?.response?.data?.message || (err instanceof Error ? err.message : 'Failed to mark all notifications as read');
+      setError(message);
       return false;
     }
   }, [user?._id]);
@@ -91,21 +95,21 @@ export const useNotifications = () => {
     try {
       await NotificationService.deleteNotification(notificationId);
       
-      // Update local state
-      const notification = notifications.find(n => n._id === notificationId);
-      setNotifications(prev => prev.filter(n => n._id !== notificationId));
-      
-      // Update unread count if the deleted notification was unread
-      if (notification && !notification.isRead) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
+      setNotifications(prevNotifications => {
+        const notificationToDelete = prevNotifications.find(n => n._id === notificationId);
+        if (notificationToDelete && !notificationToDelete.isRead) {
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+        return prevNotifications.filter(n => n._id !== notificationId);
+      });
       
       return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete notification');
+    } catch (err: any) {
+      const message = err?.response?.data?.message || (err instanceof Error ? err.message : 'Failed to delete notification');
+      setError(message);
       return false;
     }
-  }, [notifications]);
+  }, []);
 
   // Create a test notification
   const createTestNotification = useCallback(async () => {
@@ -128,8 +132,9 @@ export const useNotifications = () => {
       }
       
       return notification;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create test notification');
+    } catch (err: any) {
+      const message = err?.response?.data?.message || (err instanceof Error ? err.message : 'Failed to create test notification');
+      setError(message);
       return null;
     }
   }, [user?._id]);

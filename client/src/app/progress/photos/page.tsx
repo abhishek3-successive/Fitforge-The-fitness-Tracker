@@ -74,7 +74,7 @@ export default function ProgressPhotosPage() {
       neck: '',
     },
     tags: '',
-    isPublic: false,
+    isPublic: true,
     file: null as File | null,
     preview: null as string | null,
   });

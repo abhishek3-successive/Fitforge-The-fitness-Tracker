@@ -86,23 +86,27 @@ export const getProgressPhotos = async (req: Request, res: Response) => {
       userId,
       category,
       bodyPart,
-      isPublic = 'true',
+      isPublic,
       tags,
       sortBy = 'newest'
     } = req.query;
 
-    // Build filter object
     const filter: any = {};
     
     if (userId) filter.user = userId;
     if (category) filter.category = category;
     if (bodyPart) filter.bodyPart = bodyPart;
-    if (isPublic !== 'all') filter.isPublic = isPublic === 'true';
+
+    // Only apply filter if client passes isPublic
+    if (typeof isPublic !== 'undefined' && isPublic !== 'all') {
+      filter.isPublic = isPublic === 'true';
+    }
+
     if (tags) filter.tags = { $in: (tags as string).split(',') };
 
     const skip = (Number(page) - 1) * Number(limit);
 
-    // Sort options
+    // Sorting
     const sortOptions: any = {};
     if (sortBy === 'newest') sortOptions.dateTaken = -1;
     else if (sortBy === 'oldest') sortOptions.dateTaken = 1;
@@ -135,7 +139,6 @@ export const getProgressPhotos = async (req: Request, res: Response) => {
     });
   }
 };
-
 // Get progress photo by ID
 export const getProgressPhotoById = async (req: Request, res: Response) => {
   try {
@@ -198,8 +201,15 @@ export const updateProgressPhoto = async (req: Request, res: Response) => {
 // Delete progress photo
 export const deleteProgressPhoto = async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
     const { id } = req.params;
-    const photo = await ProgressPhoto.findByIdAndDelete(id);
+    const photo = await ProgressPhoto.findById(id);
 
     if (!photo) {
       return res.status(404).json({
@@ -207,6 +217,16 @@ export const deleteProgressPhoto = async (req: Request, res: Response) => {
         message: "Progress photo not found"
       });
     }
+
+    // Add ownership check
+    if (photo.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete this photo",
+      });
+    }
+
+    await photo.deleteOne();
 
     // Delete the associated file
     if (photo.imageUrl) {
