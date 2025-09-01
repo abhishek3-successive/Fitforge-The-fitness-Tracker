@@ -74,7 +74,7 @@ export default function ProgressPhotosPage() {
       neck: '',
     },
     tags: '',
-    isPublic: true,
+    isPublic: false,
     file: null as File | null,
     preview: null as string | null,
   });
@@ -91,7 +91,26 @@ export default function ProgressPhotosPage() {
     try {
       setIsLoading(true);
       const response = await ProgressPhotoService.getUserProgressPhotos();
-      setPhotos(response.data || []);
+      console.log('Progress photos response:', response); // Debug log
+      console.log('Response structure:', JSON.stringify(response, null, 2)); // Detailed debug log
+      
+      // Check if response is directly an array or has a data property
+      let photos: ProgressPhoto[];
+      if (Array.isArray(response)) {
+        // Response is directly an array of photos
+        photos = response;
+      } else if (response.data && Array.isArray(response.data)) {
+        // Response has a data property containing the array
+        photos = response.data;
+      } else {
+        // Fallback to empty array
+        photos = [];
+      }
+      
+      console.log('Extracted photos:', photos); // Debug the extracted data
+      console.log('Photos count:', photos.length); // Debug count
+      
+      setPhotos(photos);
     } catch (error) {
       console.error('Failed to fetch progress photos:', error);
       toast.error('Failed to load progress photos');
@@ -203,9 +222,45 @@ export default function ProgressPhotosPage() {
     setViewDialogOpen(true);
   };
 
+  // Helper function to fix image URL if needed
+  const getImageUrl = (photo: ProgressPhoto) => {
+    let imageUrl = photo.imageUrl;
+    
+    // Fix common URL issues
+    if (imageUrl.startsWith('/server/')) {
+      imageUrl = imageUrl.replace('/server', '');
+    }
+    if (imageUrl.startsWith('/home/')) {
+      // Extract just the filename and use proper path
+      const filename = imageUrl.split('/').pop();
+      imageUrl = `/progress-photos/${filename}`;
+    }
+    
+    // Ensure URL starts with proper API base
+    if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/api/')) {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api';
+      if (imageUrl.startsWith('/')) {
+        imageUrl = `${apiBaseUrl}${imageUrl}`;
+      } else {
+        imageUrl = `${apiBaseUrl}/${imageUrl}`;
+      }
+    }
+    
+    return imageUrl;
+  };
+
   const filteredPhotos = filterCategory === 'all' 
     ? photos 
     : photos.filter(photo => photo.category === filterCategory);
+
+  console.log('Current state:', { 
+    isLoading, 
+    photosCount: photos.length, 
+    filteredCount: filteredPhotos.length, 
+    filterCategory,
+    isAuthenticated,
+    user: user?._id 
+  }); // Debug log
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -365,10 +420,15 @@ export default function ProgressPhotosPage() {
                   <CardMedia
                     component="img"
                     height="300"
-                    image={photo.imageUrl}
+                    image={getImageUrl(photo)}
                     alt={photo.description || 'Progress photo'}
                     sx={{ objectFit: 'cover', cursor: 'pointer' }}
                     onClick={() => handleViewPhoto(photo)}
+                    onError={(e) => {
+                      console.log('Image load error for:', photo.imageUrl, 'Fixed URL:', getImageUrl(photo));
+                      // Optional: Set a fallback image
+                      // e.currentTarget.src = '/placeholder-image.jpg';
+                    }}
                   />
                   <IconButton
                     size="small"
@@ -572,7 +632,7 @@ export default function ProgressPhotosPage() {
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
                   <Box sx={{ flex: 2 }}>
                     <img
-                      src={selectedPhoto.imageUrl}
+                      src={getImageUrl(selectedPhoto)}
                       alt={selectedPhoto.description || 'Progress photo'}
                       style={{
                         width: '100%',
