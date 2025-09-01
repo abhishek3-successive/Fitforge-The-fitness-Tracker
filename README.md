@@ -26,8 +26,6 @@ A comprehensive fitness tracking application built with modern web technologies,
 - [TypeScript](https://www.typescriptlang.org/) – Type-safe development
 - [Tailwind CSS](https://tailwindcss.com/) – Utility-first CSS framework
 - [Apollo Client](https://www.apollographql.com/docs/react/) – GraphQL client
-- [Framer Motion](https://www.framer.com/motion/) – Animations
-- [NextAuth.js](https://next-auth.js.org/) – Authentication
 
 ### Backend
 
