@@ -63,7 +63,7 @@ Ensure you have the following installed:
 1. **Clone the repository**
 
    ```bash
-   git clonehttps://github.com/abhishek3-successive/Fitforge-The-fitness-Tracker.git
+   git clone https://github.com/abhishek3-successive/Fitforge-The-fitness-Tracker.git
    cd fitness-tracker
    ```
 
