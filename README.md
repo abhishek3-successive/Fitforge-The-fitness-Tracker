@@ -40,7 +40,6 @@ A comprehensive fitness tracking application built with modern web technologies,
 
 - TypeScript – Static type checking
 - GraphQL – API query language
-- Docker – Containerization
 - GitHub Actions – CI/CD pipeline
 
 ---
