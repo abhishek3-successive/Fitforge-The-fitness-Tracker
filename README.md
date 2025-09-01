@@ -22,7 +22,7 @@ A comprehensive fitness tracking application built with modern web technologies,
 
 ### Frontend
 
-- [Next.js 14+](https://nextjs.org/) – React framework with App Router
+- [Next.js 15+](https://nextjs.org/) – React framework with App Router
 - [TypeScript](https://www.typescriptlang.org/) – Type-safe development
 - [Tailwind CSS](https://tailwindcss.com/) – Utility-first CSS framework
 - [Apollo Client](https://www.apollographql.com/docs/react/) – GraphQL client
