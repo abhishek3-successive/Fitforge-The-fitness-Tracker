@@ -1,7 +1,5 @@
 # 🏋️ Fitforge
 
-⚠️ **This project is currently in active development. Features and APIs are subject to change.**
-
 A comprehensive fitness tracking application built with modern web technologies, designed to help users achieve their fitness goals through structured workout plans, progress monitoring, and social challenges.
 
 ---
@@ -132,7 +130,7 @@ NEXT_PUBLIC_APP_URL=<Next app url>
 - Real-time notifications
 - Mobile responsive design
 
-### 📋 Planned Features
+### 📋 Future scope
 
 - Third-party integrations (fitness devices)
 - Advanced workout templates
